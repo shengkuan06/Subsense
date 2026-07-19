@@ -1,0 +1,20 @@
+﻿# Python
+.venv/
+__pycache__/
+*.pyc
+*.db
+.env
+
+# ML artifacts
+ml/model.pkl
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
