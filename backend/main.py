@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import customers, dashboard
+from backend.routers import customers, dashboard, recommendations, interventions
 
 app = FastAPI(title="SubSense API")
 
@@ -11,12 +11,16 @@ app.add_middleware(
         "http://localhost:5173", "http://127.0.0.1:5173",
         "http://localhost:3000", "http://127.0.0.1:3000",
     ],
+    # Allow any Vercel preview / production deployment of the dashboard.
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(customers.router)
 app.include_router(dashboard.router)
+app.include_router(recommendations.router)
+app.include_router(interventions.router)
 
 @app.get("/health")
 def health():

@@ -1,6 +1,8 @@
-import { Customer } from "./types";
+import { Customer, Playbook, SegmentMetrics } from "./types";
 
-const BASE = "http://127.0.0.1:8000/api";
+// Defaults to the local API in dev; set VITE_API_BASE at build time (Vercel)
+// to point the deployed dashboard at the hosted API.
+const BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
 
 const PLAN_MAP: Record<string, Customer["plan"]> = {
   Basic: "Standard",
@@ -52,4 +54,55 @@ export async function fetchCustomerDetail(id: string): Promise<Partial<Customer>
     },
     riskReasons: (ch.drivers ?? []).map((d: any) => `${d.feature} — ${d.direction}`),
   };
+}
+
+// Portfolio retention playbooks (Pillar 3 — recommendation engine).
+export async function fetchPlaybooks(): Promise<Playbook[]> {
+  const res = await fetch(`${BASE}/playbooks?limit=60`);
+  const json = await res.json();
+  return (json.data ?? []).map((p: any) => ({
+    id: p.id,
+    customerId: p.customerId,
+    customerName: p.customerName ?? p.customerId,
+    plan: PLAN_MAP[p.plan] ?? "Standard",
+    mrr: Math.round(p.mrr ?? 0),
+    status: (p.status as Playbook["status"]) ?? "At-Risk",
+    title: p.title ?? "Recommended action",
+    description: p.description ?? "",
+    type: (p.type as Playbook["type"]) ?? "ai",
+    riskLevel: (p.riskLevel as Playbook["riskLevel"]) ?? "MEDIUM RISK",
+    completed: false,
+    actionText: p.actionText ?? "Send",
+  }));
+}
+
+// Per-segment rollups for the Segments view.
+export async function fetchSegments(): Promise<SegmentMetrics[]> {
+  const res = await fetch(`${BASE}/segments`);
+  const json = await res.json();
+  return (json.data ?? []).map((s: any) => ({
+    name: s.name as SegmentMetrics["name"],
+    customerCount: s.customerCount ?? 0,
+    avgHealthScore: Math.round(s.avgHealthScore ?? 0),
+    churnRiskPercent: Math.round(s.churnRiskPercent ?? 0),
+    mrrText: s.mrrText ?? "$0",
+    healthBreakdown: {
+      healthy: Math.round(s.healthBreakdown?.healthy ?? 0),
+      atRisk: Math.round(s.healthBreakdown?.atRisk ?? 0),
+      critical: Math.round(s.healthBreakdown?.critical ?? 0),
+    },
+  }));
+}
+
+// Record an executed intervention (fire-and-forget; UI stays optimistic).
+export async function logIntervention(customerId: string, playbook: string): Promise<void> {
+  try {
+    await fetch(`${BASE}/interventions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customer_id: customerId, playbook, status: "sent" }),
+    });
+  } catch {
+    /* backend offline - optimistic UI already updated */
+  }
 }

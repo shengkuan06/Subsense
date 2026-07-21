@@ -38,8 +38,8 @@ subsense/
 │  ├─ main.py        entry point (uvicorn backend.main:app)
 │  ├─ models.py      10 SQLAlchemy tables
 │  ├─ database.py    engine + session
-│  ├─ routers/       customers.py, dashboard.py
-│  └─ services/      ingestion.py (ETL)
+│  ├─ routers/       customers.py, dashboard.py, recommendations.py, interventions.py
+│  └─ services/      ingestion.py (ETL), recommend.py (Pillar 3 actions)
 ├─ ml/               feature engineering + models
 │  ├─ seed_data.py   builds the database from telco.csv
 │  ├─ features.py    computes customer_features
@@ -112,6 +112,13 @@ offline, so the design always renders.
 | `GET /api/customers/{id}/health` | Health score and its four dimensions |
 | `GET /api/customers/{id}/churn` | Churn probability + SHAP risk drivers |
 | `GET /api/alerts` | Active customers ranked by churn risk |
+| `GET /api/customers/{id}/recommendations` | Plan right-size + next best action (Fn 3.1, 3.2) |
+| `GET /api/playbooks` | Portfolio retention playbooks for the Actions board (Fn 3.2) |
+| `GET /api/segments` | Per-segment health / risk / MRR rollups (Fn 1.3) |
+| `GET /api/payments/at-risk` | Failed / expiring payments + suggested retry timing (Fn 3.3) |
+| `GET /api/interventions` | Track intervention status / outcomes (Fn 3.2) |
+| `POST /api/interventions` | Create / queue an intervention (Fn 3.2) |
+| `PATCH /api/interventions/{id}` | Advance status or record outcome (Fn 3.2) |
 
 All responses use the envelope `{ success, data, error, meta }`.
 

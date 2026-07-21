@@ -1,13 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { TrendingUp, HelpCircle, ArrowUpRight, BarChart2 } from "lucide-react";
 import { SegmentMetrics } from "../types";
 import { INITIAL_SEGMENT_METRICS } from "../data";
+import { fetchSegments } from "../api";
 import AnimatedNumber from "./AnimatedNumber";
 
 export default function SegmentsView() {
   const [segments, setSegments] = useState<SegmentMetrics[]>(INITIAL_SEGMENT_METRICS);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  // Load real segment rollups from the API; keep mock data if the backend is offline.
+  useEffect(() => {
+    fetchSegments()
+      .then((list) => {
+        if (list.length) setSegments(list);
+      })
+      .catch(() => {
+        /* backend offline - keep mock data */
+      });
+  }, []);
 
   return (
     <motion.div
