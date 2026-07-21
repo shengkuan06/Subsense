@@ -1,6 +1,8 @@
 import { Customer, Playbook, SegmentMetrics } from "./types";
 
-const BASE = "http://127.0.0.1:8000/api";
+// Defaults to the local API in dev; set VITE_API_BASE at build time (Vercel)
+// to point the deployed dashboard at the hosted API.
+const BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
 
 const PLAN_MAP: Record<string, Customer["plan"]> = {
   Basic: "Standard",
