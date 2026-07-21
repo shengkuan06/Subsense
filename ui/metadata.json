@@ -1,0 +1,6 @@
+{
+  "name": "SubSense",
+  "description": "SubSense is a premium customer success intelligence and revenue risk command center. Track real-time customer health, run cohort analytics, and initiate retention playbooks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

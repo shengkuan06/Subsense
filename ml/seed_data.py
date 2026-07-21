@@ -60,23 +60,36 @@ def seed():
             status="churned" if churned else "active",
         ))
 
-        # usage — churners decay over 12 weeks, healthy stay flat
+        # usage — decay strength varies. Some churn with little warning, and
+        # ~25% of ACTIVE customers quietly decline (the at-risk demo cohort).
+        # Behaviour is an IMPERFECT signal of churn — that is what makes the
+        # problem realistic. ~30% of churners leave with no warning signs
+        # (price, competitor, budget), and ~15% of ACTIVE customers already
+        # behave like churners — those are the accounts SubSense exists to save.
+        behaves_risky = random.random() < (0.78 if churned else 0.12)
+
+        if behaves_risky:
+            decay = random.choice([0.9, 0.7, 0.5])
+        else:
+            decay = random.choices([0.0, 0.2], weights=[0.8, 0.2])[0]
+
         base = random.randint(15, 40)
         for w in range(WEEKS):
-            factor = max(0.05, 1 - (w / WEEKS) * 0.9) if churned else random.uniform(0.9, 1.1)
+            factor = max(0.05, 1 - (w / WEEKS) * decay) * random.uniform(0.8, 1.2)
             sessions = max(0, int(base * factor))
             db.add(m.UsageEvent(
                 customer_id=cid,
                 date=today - timedelta(weeks=(WEEKS - w)),
                 active_days=min(7, max(0, sessions // 4)),
                 sessions=sessions,
-                features_used=random.randint(1, 3) if churned else random.randint(3, 8),
+                features_used=max(1, min(8, int(random.gauss(3 if decay > 0.4 else 6, 2)))),
                 seats_used=random.randint(1, plan[4]),
             ))
 
-        # payments — churners get failures (involuntary churn signal)
+        # payments — failure rate scales with risk (drives involuntary churn)
+        fail_rate = 0.18 if behaves_risky else 0.03
         for mth in range(6):
-            failed = churned and random.random() < 0.25
+            failed = random.random() < fail_rate
             db.add(m.Payment(
                 customer_id=cid,
                 date=today - timedelta(days=30 * (6 - mth)),
@@ -87,14 +100,15 @@ def seed():
             ))
 
         # support tickets
-        for _ in range(random.randint(3, 8) if churned else random.randint(0, 2)):
+        n_tickets = max(0, int(random.gauss(4.5 if behaves_risky else 1.2, 2.2)))
+        for _ in range(n_tickets):
             created = datetime.now() - timedelta(days=random.randint(1, 90))
             db.add(m.SupportTicket(
                 customer_id=cid,
                 created_at=created,
                 resolved_at=created + timedelta(hours=random.randint(2, 96)),
                 severity=random.choice(["low", "medium", "high"]),
-                csat=round(random.uniform(1, 3), 1) if churned else round(random.uniform(3.5, 5), 1),
+                csat=round(min(5, max(1, random.gauss(2.8 if behaves_risky else 4.2, 1.0))), 1),
             ))
 
         # feedback
@@ -102,8 +116,8 @@ def seed():
             db.add(m.Feedback(
                 customer_id=cid,
                 date=today - timedelta(days=random.randint(1, 120)),
-                nps=random.randint(0, 6) if churned else random.randint(7, 10),
-                sentiment=round(random.uniform(-1, -0.1), 2) if churned else round(random.uniform(0.1, 1), 2),
+                nps=int(min(10, max(0, random.gauss(4.5 if behaves_risky else 7.5, 2.5)))),
+                sentiment=round(min(1, max(-1, random.gauss(-0.25 if behaves_risky else 0.4, 0.5))), 2),
             ))
 
     db.commit()
