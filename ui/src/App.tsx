@@ -12,7 +12,15 @@ import NewReportModal from "./components/NewReportModal";
 import Toast, { ToastMessage } from "./components/Toast";
 import { Customer, Playbook } from "./types";
 import { INITIAL_CUSTOMERS, INITIAL_PLAYBOOKS, AVATARS } from "./data";
-import { fetchCustomers, fetchCustomerDetail } from "./api";
+import { fetchCustomers, fetchCustomerDetail, fetchPlaybooks, logIntervention } from "./api";
+
+// Maps a playbook card type to the intervention playbook name the API expects.
+const PLAYBOOK_NAME: Record<Playbook["type"], string> = {
+  ai: "csm_outreach",
+  pause: "pause_offer",
+  winback: "winback",
+  retry: "payment_retry",
+};
 
 export default function App() {
   // Application state
@@ -36,6 +44,15 @@ export default function App() {
       })
       .catch(() => {
         /* backend offline - keep mock data */
+      });
+
+    // Load AI-generated retention playbooks (Pillar 3). Falls back to mock data.
+    fetchPlaybooks()
+      .then((list) => {
+        if (list.length) setPlaybooks(list);
+      })
+      .catch(() => {
+        /* backend offline - keep mock playbooks */
       });
   }, []);
 
@@ -92,6 +109,9 @@ export default function App() {
 
     const playbook = playbooks.find((p) => p.id === playbookId);
     if (!playbook) return;
+
+    // Persist the intervention to the backend (tracked in the interventions table).
+    logIntervention(playbook.customerId, PLAYBOOK_NAME[playbook.type]);
 
     // 2. Resolve risk and improve corresponding customer health score
     setCustomers((prev) =>

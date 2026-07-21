@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import customers, dashboard
+from backend.routers import customers, dashboard, recommendations, interventions
 
 app = FastAPI(title="SubSense API")
 
@@ -17,6 +17,8 @@ app.add_middleware(
 
 app.include_router(customers.router)
 app.include_router(dashboard.router)
+app.include_router(recommendations.router)
+app.include_router(interventions.router)
 
 @app.get("/health")
 def health():
