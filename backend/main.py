@@ -11,8 +11,8 @@ app.add_middleware(
         "http://localhost:5173", "http://127.0.0.1:5173",
         "http://localhost:3000", "http://127.0.0.1:3000",
     ],
-    # Allow any Vercel preview / production deployment of the dashboard.
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    # Allow any Vercel / Netlify preview or production deployment of the dashboard.
+    allow_origin_regex=r"https://.*\.(vercel|netlify)\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
