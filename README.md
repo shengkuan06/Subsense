@@ -8,6 +8,26 @@ score, and recommends the right retention action before the customer leaves.
 
 ---
 
+## 🚀 Live deployment
+
+The app is deployed and running — no local setup needed to see it:
+
+| | URL |
+| --- | --- |
+| **Dashboard** (the app) | https://polite-torrone-f14833.netlify.app |
+| **API** | https://subsense-api-pbjy.onrender.com |
+| **Interactive API docs** | https://subsense-api-pbjy.onrender.com/docs |
+
+- **Frontend** → Netlify (static build of `ui/`, with `VITE_API_BASE` pointing at the API).
+- **API** → Render (blueprint in `render.yaml`; builds the DB + model at deploy time).
+- **Heads-up:** the free Render API sleeps after ~15 min idle. If the dashboard shows
+  zeros, open the API URL once to wake it (~50s), then refresh. Warm it up before a demo.
+
+To redeploy after changes: push to `main`, then in Render trigger **Manual Deploy → Deploy
+latest commit**; for the frontend, rebuild `ui/` and re-drop `ui/dist` on Netlify.
+
+---
+
 ## What it does
 
 | Pillar | Problem solved | Key capability |
