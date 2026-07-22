@@ -5,6 +5,7 @@
 SubSense is an early-warning system for subscription businesses. It unifies scattered
 customer data into one profile, predicts who will churn with an **explainable** health
 score, and recommends the right retention action before the customer leaves.
+website URL: https://subsense-rho.vercel.app/
 
 ---
 
